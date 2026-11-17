@@ -284,21 +284,34 @@ with tab_map:
     ssub = stops_df[stops_df["Method"] == shown]
     vehicles = c2.multiselect("Vehicles to show (empty = all)", rsub["Vehicle"].tolist(),
                               format_func=lambda v: f"Vehicle {v}")
+    show_legs = st.checkbox("Show the drives to and from the depot", value=True,
+                            help="Thin, faint lines from the Tit Mellil depot to the first store and back from the last store.")
     left, right = st.columns([3, 2])
     with left:
         fig = go.Figure()
         for v, grp in ssub.groupby("Vehicle"):
+            grp = grp.sort_values("Stop")
             on = not vehicles or v in vehicles
+            picked = bool(vehicles) and v in vehicles
             info = rsub[rsub["Vehicle"] == v].iloc[0]
-            hover = [("Tit Mellil Depot" if cid == "DEPOT" else f"<b>{name}</b><br>{cid} · {cat}")
-                     + f"<br>Vehicle {v}, stop {s} · {d} kg"
-                     for cid, name, cat, s, d in zip(grp["Customer ID"], grp["Store"], grp["Category"],
-                                                     grp["Stop"], grp["Demand (kg)"])]
+            body = grp.iloc[1:-1]
+            if show_legs:
+                # drives from the depot to the first store and back from the last store: thin and faint
+                leg_lat = [grp["Latitude"].iloc[0], grp["Latitude"].iloc[1], None,
+                           grp["Latitude"].iloc[-2], grp["Latitude"].iloc[-1]]
+                leg_lon = [grp["Longitude"].iloc[0], grp["Longitude"].iloc[1], None,
+                           grp["Longitude"].iloc[-2], grp["Longitude"].iloc[-1]]
+                fig.add_trace(MapTrace(lat=leg_lat, lon=leg_lon, mode="lines",
+                                       line=dict(width=2 if picked else 1, color=VCOLORS[v - 1]),
+                                       opacity=0.85 if picked else (0.18 if on else 0.04),
+                                       hoverinfo="skip", showlegend=False))
+            hover = [f"<b>{name}</b><br>{cid} · {cat}<br>Vehicle {v}, stop {s} · {d} kg"
+                     for cid, name, cat, s, d in zip(body["Customer ID"], body["Store"], body["Category"],
+                                                     body["Stop"], body["Demand (kg)"])]
             fig.add_trace(MapTrace(
-                lat=grp["Latitude"], lon=grp["Longitude"], mode="lines+markers",
-                line=dict(width=3 if on and vehicles else 2, color=VCOLORS[v - 1]),
-                marker=dict(size=[0 if c == "DEPOT" else 6 + d / 90 for c, d in zip(grp["Customer ID"], grp["Demand (kg)"])],
-                            color=VCOLORS[v - 1]),
+                lat=body["Latitude"], lon=body["Longitude"], mode="lines+markers",
+                line=dict(width=4 if picked else 2.5, color=VCOLORS[v - 1]),
+                marker=dict(size=[6 + d / 90 for d in body["Demand (kg)"]], color=VCOLORS[v - 1]),
                 opacity=1 if on else 0.12, name=f"V{v}: {info['Stores']} stores, {info['Distance (km)']} km",
                 text=hover, hoverinfo="text"))
         fig.add_trace(MapTrace(lat=[depot["Latitude"]], lon=[depot["Longitude"]], mode="markers+text",
@@ -310,7 +323,7 @@ with tab_map:
                                            center=dict(lat=lat_mid, lon=lon_mid))},
                           margin=dict(l=0, r=0, t=0, b=0), height=560, showlegend=False)
         st.plotly_chart(fig, width="stretch", config={"displaylogo": False, "scrollZoom": True})
-        st.caption("Each colour is one vehicle's loop. Marker size grows with store demand. Scroll to zoom, hover for details.")
+        st.caption("Each colour is one vehicle's delivery loop in the city. Faint lines are the drives to and from the Tit Mellil depot. Marker size grows with store demand. Scroll to zoom, hover for details.")
     with right:
         view = rsub if not vehicles else rsub[rsub["Vehicle"].isin(vehicles)]
         st.dataframe(view[["Vehicle", "Stores", "Load (kg)", "Utilization (%)", "Distance (km)", "Drive time (min)"]],
