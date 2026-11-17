@@ -2,7 +2,7 @@
 
 The three methods are ported from the project's Colab notebook
 (Casablanca_CVRP_Cleaned_Model) and only parameterised, so that with the
-default inputs they follow the same logic as the thesis experiments:
+default inputs they follow the same logic as the capstone experiments:
 
 * Nearest Neighbor: greedy nearest feasible customer.
 * OR-Tools: Path Cheapest Arc + Guided Local Search, fixed vehicle cost

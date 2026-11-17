@@ -8,7 +8,7 @@ in Casablanca: A CVRP Approach" (268 supermarkets, Tit Mellil depot, OSRM road m
     python3 -m pip install -r requirements.txt
     python3 -m streamlit run app.py
 
-It opens at http://localhost:8501 and shows the thesis results immediately.
+It opens at http://localhost:8501 and shows the capstone results immediately.
 The route map needs an internet connection for the background map tiles.
 
 ## What you can do
@@ -25,4 +25,4 @@ The route map needs an internet connection for the background map tiles.
 Change capacity, fleet, demand (%), method and the OR-Tools time limit in the sidebar and
 press **Run optimization** to re-solve. Van-planner and cost sliders update instantly.
 
-Tabu Search uses the thesis settings (300 iterations, tenure 15, 20 neighbours, seed 4394).
+Tabu Search uses the capstone settings (300 iterations, tenure 15, 20 neighbours, seed 4394).
