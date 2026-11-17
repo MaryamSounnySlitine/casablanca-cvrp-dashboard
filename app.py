@@ -304,9 +304,10 @@ with tab_map:
         fig.add_trace(MapTrace(lat=[depot["Latitude"]], lon=[depot["Longitude"]], mode="markers+text",
                                marker=dict(size=18, color="#111111"), text=["Depot"], textposition="top right",
                                name="Tit Mellil Depot", hoverinfo="name"))
-        fig.update_layout(**{MAP_KEY: dict(style="carto-positron", zoom=10.4,
-                                           center=dict(lat=float(ssub["Latitude"].mean()),
-                                                       lon=float(ssub["Longitude"].mean())))},
+        lat_mid = float((ssub["Latitude"].min() + ssub["Latitude"].max()) / 2)
+        lon_mid = float((ssub["Longitude"].min() + ssub["Longitude"].max()) / 2)
+        fig.update_layout(**{MAP_KEY: dict(style="carto-positron", zoom=10.7,
+                                           center=dict(lat=lat_mid, lon=lon_mid))},
                           margin=dict(l=0, r=0, t=0, b=0), height=560, showlegend=False)
         st.plotly_chart(fig, width="stretch", config={"displaylogo": False, "scrollZoom": True})
         st.caption("Each colour is one vehicle's loop. Marker size grows with store demand. Scroll to zoom, hover for details.")
@@ -475,7 +476,7 @@ with tab_data:
         buf = io.BytesIO()
         with pd.ExcelWriter(buf, engine="openpyxl") as xw:
             pd.DataFrame({"Input": list(out["inputs"].keys()),
-                          "Value": [str(v) for v in out["inputs"].values()]}).to_excel(xw, "Inputs", index=False)
+                          "Value": [str(v) for v in out["inputs"].values()]}).to_excel(xw, sheet_name="Inputs", index=False)
             summary.to_excel(xw, sheet_name="Summary", index=False)
             routes_df.to_excel(xw, sheet_name="Routes", index=False)
             stops_df.to_excel(xw, sheet_name="Stops", index=False)
