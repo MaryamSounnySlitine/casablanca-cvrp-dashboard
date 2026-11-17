@@ -84,7 +84,7 @@ def load_data():
 
 @st.cache_data(show_spinner=False)
 def load_thesis_routes():
-    """Routes of the thesis experiment, as node indices (1..268)."""
+    """Routes of the capstone experiment, as node indices (1..268)."""
     customers = pd.read_excel(DEMAND_FILE, sheet_name="Customers")
     index = {cid: i + 1 for i, cid in enumerate(customers["Customer_ID"].astype(str))}
     rs = pd.read_excel(THESIS_FILE, sheet_name="Route_Summary")
@@ -120,7 +120,7 @@ with st.sidebar.form("inputs"):
                               help="Applied to every store. 20 means each store orders 20% more.")
     method = st.selectbox("Solution method", METHOD_OPTIONS, index=0)
     gls_time = st.slider("OR-Tools time limit (s)", 5, 300, 60, 5,
-                         help="Search time for Guided Local Search. The thesis used 120 s.")
+                         help="Search time for Guided Local Search. The capstone used 120 s.")
     run = st.form_submit_button("🚀 Run optimization", type="primary", width="stretch")
 
 st.sidebar.markdown("### 🚐 Van planner")
@@ -204,7 +204,7 @@ inputs_now = {"Vehicle capacity (kg)": capacity, "Available vehicles": max_fleet
               "Solution method": method, "OR-Tools time limit (s)": gls_time}
 
 if "out" not in st.session_state:
-    st.session_state["out"] = package(load_thesis_routes(), "thesis", inputs_now | {"Solution method": "Thesis results"})
+    st.session_state["out"] = package(load_thesis_routes(), "capstone", inputs_now | {"Solution method": "Capstone results"})
 
 if run:
     if demands.max() > capacity:
@@ -239,8 +239,8 @@ best = summary.sort_values(["Vehicles", "Distance (km)"]).iloc[0]
 # Header
 # --------------------------------------------------------------------------
 
-src_label = ("Showing the thesis experiment results. Change the inputs and press Run optimization to re-solve."
-             if out["source"] == "thesis" else "Showing your latest optimization run.")
+src_label = ("Showing the capstone results. Change the inputs and press Run optimization to re-solve."
+             if out["source"] == "capstone" else "Showing your latest optimization run.")
 st.markdown(
     f"""<div class="hero"><span class="tag">EGR 4394 Capstone · CVRP</span>
     <h1>🚚 Casablanca Urban Distribution Routing</h1>
