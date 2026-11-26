@@ -228,11 +228,28 @@ if run:
                                     TABU_NEIGHBOURS, TABU_SEED,
                                     progress=lambda f: prog.progress(0.6 + 0.4 * f, text="Tabu Search..."))
     prog.empty()
+    notes = []
+    if GLS in results and not results[GLS]["routes"]:
+        notes.append(f"OR-Tools GLS found no plan with only {max_fleet} vehicles, so it is not shown. "
+                     f"The theoretical minimum is {lower_bound}, but in practice more vehicles are needed. "
+                     "Increase 'Available vehicles' to see its plan.")
+        del results[GLS]
+    for m in (NN, TABU):
+        if m in results and len(results[m]["routes"]) > max_fleet:
+            notes.append(f"{m} does not use the vehicle limit: its plan needs {len(results[m]['routes'])} vehicles, "
+                         f"more than the {max_fleet} available.")
+    if not results:
+        st.error(" ".join(notes) or "No plan was found with these inputs.")
+        st.stop()
     st.session_state["out"] = package(results, "run", inputs_now)
+    st.session_state["out"]["notes"] = notes
 
 out = st.session_state["out"]
 summary, routes_df, stops_df = out["summary"], out["routes"], out["stops"]
-best = summary.sort_values(["Vehicles", "Distance (km)"]).iloc[0]
+limit = out["inputs"].get("Available vehicles", 100)
+summary["Within vehicle limit"] = ["Yes" if v <= limit else "No" for v in summary["Vehicles"]]
+_ok = summary[summary["Within vehicle limit"] == "Yes"]
+best = (_ok if len(_ok) else summary).sort_values(["Vehicles", "Distance (km)"]).iloc[0]
 
 
 # --------------------------------------------------------------------------
@@ -246,6 +263,9 @@ st.markdown(
     <h1>🚚 Casablanca Urban Distribution Routing</h1>
     <p>Tit Mellil depot → {len(customers)} supermarkets · OSRM road distances and travel times · {src_label}</p></div>""",
     unsafe_allow_html=True)
+
+for _note in out.get("notes", []):
+    st.warning(_note, icon="⚠️")
 
 saving = best.get("Saving vs NN (%)", float("nan"))
 kpis = [
